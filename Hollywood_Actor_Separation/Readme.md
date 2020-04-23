@@ -4,7 +4,11 @@
 
 ### Usage
 
-python degrees.py large
+`python degrees.py large` 
+
+Enter the names of two actors when prompted.
+
+![Example Usage](https://i.imgur.com/JR0Pz4k.png)
 
 ### How it works
 
