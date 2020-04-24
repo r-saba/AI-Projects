@@ -5,6 +5,7 @@ Tic Tac Toe Player
 import math
 import numpy as np
 import copy
+from random import randrange
 
 X = "X"
 O = "O"
@@ -120,31 +121,47 @@ def minimax(board):
     if terminal(board):
         return None
 
-    return optimalMove(board)
+    if board == initial_state():
+        return (randrange(3), randrange(3))
+
+    # Player X should maximize the utility score
+    # Chooses the action which would result in the largest score
+    if player(board) == X:
+        v = -math.inf
+        move = (-10, -10)
+        for action in actions(board):
+            minv = MIN_VALUE(result(board, action))
+            if (minv > v):
+                v = minv
+                move = action
+        return move
+
+    # Player O should minimize the utility score
+    # Chooses the action which would result in the smallest score
+    if player(board) == O:
+        v = math.inf
+        move = (10, 10)
+        for action in actions(board):
+            maxv = MAX_VALUE(result(board, action))
+            if(maxv < v):
+                v = maxv
+                move = action
+        return move
 
 
-def optimalMove(board):
-    actionSet = actions(board)
+def MIN_VALUE(board):
+    if (terminal(board)):
+        return utility(board)
+    v = math.inf
+    for action in actions(board):
+        v = min(v, MAX_VALUE(result(board, action)))
+    return v
 
-    for action in actionSet:
-        actionBoard = result(board, action)
-        optimalMove(actionBoard)
-        if(player(board) == X and utility(actionBoard) == 1):
-            return action
-        elif(player(board) == O and utility(actionBoard) == -1):
-            return action
-        elif(terminal(actionBoard)):
-            return action
 
-    # maximize = True if player(board) == X else False
-    # actionSet = actions(board)
-
-    # for action in actionSet:
-    #     if(terminal(board)):
-    #         return utility(board)
-    #     nextBoard = result(board, action)
-    #     actionUtility = optimalMove(nextBoard)
-    #     if maximize and actionUtility == 1:
-    #         return action
-    #     elif not maximize and actionUtility == -1:
-    #         return action
+def MAX_VALUE(board):
+    if (terminal(board)):
+        return utility(board)
+    v = -math.inf
+    for action in actions(board):
+        v = max(v, MIN_VALUE(result(board, action)))
+    return v
