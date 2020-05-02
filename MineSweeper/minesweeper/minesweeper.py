@@ -189,6 +189,25 @@ class MinesweeperAI():
         """
         self.moves_made.add(cell)
         self.mark_safe(cell)
+        x = cell[0]
+        y = cell[1]
+        topOfxIsInGird = x-1 >= 0
+        bottomOfxIsInGrid = x+1 <= width-1
+        leftOfyIsInGrid = y-1 >= 0
+        rightOfyIsInGrid = y+1 <= height-1
+        newSentence = set()
+
+        if(topOfxIsInGird):
+            if(rightOfyIsInGrid):
+                topLeft = (x-1, y-1)
+                if(topLeft not in self.mines or topLeft not in self.safes):
+                    newSentence.add(topLeft)
+                left = (x, y-1)
+                if(left not in self.mines or left not in self.safes):
+                    newSentence.add(left)
+                bottomLeft = (x+1, y-1)
+                if(bottomLeft not in self.mines or bottomLeft not in self.safes):
+                    newSentence.add(bottomLeft)
 
     def make_safe_move(self):
         """
