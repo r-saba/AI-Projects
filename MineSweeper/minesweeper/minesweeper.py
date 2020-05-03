@@ -192,22 +192,101 @@ class MinesweeperAI():
         x = cell[0]
         y = cell[1]
         topOfxIsInGird = x-1 >= 0
-        bottomOfxIsInGrid = x+1 <= width-1
+        bottomOfxIsInGrid = x+1 <= self.width-1
         leftOfyIsInGrid = y-1 >= 0
-        rightOfyIsInGrid = y+1 <= height-1
+        rightOfyIsInGrid = y+1 <= self.height-1
         newSentence = set()
 
         if(topOfxIsInGird):
-            if(rightOfyIsInGrid):
+            # topleft neighbor cell
+            if(leftOfyIsInGrid):
                 topLeft = (x-1, y-1)
                 if(topLeft not in self.mines or topLeft not in self.safes):
                     newSentence.add(topLeft)
-                left = (x, y-1)
-                if(left not in self.mines or left not in self.safes):
-                    newSentence.add(left)
+            # topMiddle
+            topMiddle = (x-1, y)
+            if(topMiddle not in self.mines or topMiddle not in self.safes):
+                newSentence.add(topMiddle)
+            # topRight
+            if(rightOfyIsInGrid):
+                topRight = (x-1, y+1)
+                if(topRight not in self.mines or topRight not in self.safes):
+                    newSentence.add(topRight)
+
+        if(bottomOfxIsInGrid):
+            # bottomLeft
+            if(leftOfyIsInGrid):
                 bottomLeft = (x+1, y-1)
                 if(bottomLeft not in self.mines or bottomLeft not in self.safes):
                     newSentence.add(bottomLeft)
+            # bottomMiddle
+            bottomMiddle = (x+1, y)
+            if(bottomMiddle not in self.mines or bottomMiddle not in self.safes):
+                newSentence.add(bottomMiddle)
+            # bottomRight
+            if(rightOfyIsInGrid):
+                bottomRight = (x+1, y+1)
+                if(bottomRight not in self.mines or bottomRight not in self.safes):
+                    newSentence.add(bottomRight)
+
+        if(leftOfyIsInGrid):
+            centerLeft = (x, y-1)
+            if(centerLeft not in self.mines or centerLeft not in self.safes):
+                newSentence.add(centerLeft)
+        if(rightOfyIsInGrid):
+            centerRight = (x, y+1)
+            if(centerRight not in self.mines or centerRight not in self.safes):
+                newSentence.add(centerRight)
+
+        sentenceToAdd = Sentence(newSentence, count)
+        self.knowledge.append(sentenceToAdd)
+        # Case where count = length
+        mine_cells = []
+        for sentence in self.knowledge:
+            # print("running")
+            if(sentence.known_mines() is not None):
+                for cell in sentence.known_mines():
+                    mine_cells.append(cell)
+            for cell in mine_cells:
+                sentence.mark_mine(cell)
+                self.mines.add(cell)
+
+        # Case where count is 0
+        safe_cells = []
+        for sentence in self.knowledge:
+            # print("running")
+            if(sentence.known_safes() is not None):
+                for cell in sentence.known_safes():
+                    safe_cells.append(cell)
+            for cell in safe_cells:
+                sentence.mark_safe(cell)
+                self.safes.add(cell)
+        for sentence in self.knowledge:
+            if(len(sentence.cells) == 0):
+                self.knowledge.remove(sentence)
+
+        # Case where we have a subset of another set
+        used_cells = []
+        repeatedSentence = False
+        for sentence1 in self.knowledge:
+            for sentence2 in self.knowledge:
+
+                if (sentence1 != sentence2 and len(sentence1.cells) != 0 and len(sentence2.cells) != 0 and sentence1.cells.issubset(sentence2.cells)):
+
+                    for usedCells in used_cells:
+                        if(len(sentence1.cells) == len(usedCells) and sentence1.cells.issubset(usedCells)):
+                            repeatedSentence = True
+                        elif(len(sentence2.cells) == len(usedCells) and sentence2.cells.issubset(usedCells)):
+                            repeatedSentence = True
+
+                    if(not repeatedSentence):
+                        newSentenceCells = sentence2.cells.difference(
+                            sentence1.cells)
+                        newCount = sentence2.count - sentence1.count
+                        self.knowledge.append(
+                            Sentence(newSentenceCells, newCount))
+                        used_cells.append(sentence1.cells)
+                        used_cells.append(sentence2.cells)
 
     def make_safe_move(self):
         """
@@ -218,7 +297,11 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
+        for move in self.safes:
+            if move not in self.moves_made and move not in self.mines:
+                return move
+
+        return None
 
     def make_random_move(self):
         """
@@ -227,4 +310,9 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+        for i in range(0, self.height):
+            for j in range(0, self.width):
+                move = (i, j)
+                if move not in self.moves_made and move not in self.mines:
+                    return move
+        return None
